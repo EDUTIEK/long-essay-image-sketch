@@ -1,0 +1,27 @@
+{
+    "name": "EDUTIEK/long-essay-image-sketch",
+    "description": "Draw simple shapes onto images.",
+    "type": "project",
+    "license": "GPLv3",
+    "optimize-autoloader": true,
+    "classmap-authoritative": true,
+    "authors": [
+        {
+            "name": "Lukas Scharmer",
+            "email": "lscharmer@databay.de"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "LongEssayImageSketch\\": "src/"
+        },
+        "classmap": ["./src"]
+    },
+    "require": {
+        "php": ">=7.4|8.0",
+        "ext-imagick": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5"
+    }
+}
