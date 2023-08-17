@@ -18,6 +18,7 @@ class WaveTest extends TestCase
 
     public function testDraw(): void
     {
+        $pos = new Point(23, 34);
         $angle = 1/4 * pi();
         $expected_path = [function(){}, function(){}];
         $shifted = [new Point(1, 1), new Point(2, 2), new Point(3, 3), new Point(4, 4), new Point(5, 5)];
@@ -44,8 +45,13 @@ class WaveTest extends TestCase
             [$shifted[4], $shifted[3]],
         )->willReturnOnConsecutiveCalls(...$expected_path);
         $draw->expects(self::any())->method('shiftBy')->willReturnOnConsecutiveCalls(...$shifted);
+        $draw->expects(self::once())->method('text')->with($pos, 'Hej');
+        $draw->expects(self::once())->method('withFillColor')->willReturnCallback(function ($color, $within) use ($draw) {
+            $this->assertSame('white', $color);
+            $within($draw);
+        });
 
-        $wave = new Wave(new Point(33, 33), new Point(23, 34), 'Hej', 'yellow');
+        $wave = new Wave(new Point(33, 33), $pos, 'Hej', 'yellow');
         $wave->draw($draw);
     }
 }

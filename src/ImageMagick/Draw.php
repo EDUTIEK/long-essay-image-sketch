@@ -6,6 +6,8 @@ namespace LongEssayImageSketch\ImageMagick;
 
 use LongEssayImageSketch\Draw as DrawInterface;
 use ImagickDraw;
+use ImagickPixel;
+use Imagick;
 use LongEssayImageSketch\Point;
 use Closure;
 
@@ -15,15 +17,20 @@ use Closure;
 class Draw implements DrawInterface
 {
     private ImagickDraw $magic;
+    private Imagick $parent;
+    private Closure $shift_text;
 
-    public function __construct(ImagickDraw $magic)
+    public function __construct(ImagickDraw $magic, Imagick $parent)
     {
         $this->magic = $magic;
+        $this->parent = $parent;
+        $this->shift_text = fn (Point $pos): Point => $pos;
+        $this->magic->setTextEncoding('UTF-8');
     }
 
     public function path(Point $start, array $segments): void
     {
-        $this->withPath(function() use ($start, $segments) {
+        $this->withPath(function () use ($start, $segments): void {
             $this->magic->pathMoveToAbsolute($start->x(), $start->y());
             foreach ($segments as $segment) {
                 $segment($this->magic);
@@ -69,23 +76,17 @@ class Draw implements DrawInterface
 
     public function circle(Point $center, float $radius): void
     {
-        $this->magic->circle($center->x(), $center->y(), $center->x() + $radius, $center->y() + $radius);
+        $this->magic->circle($center->x() -1, $center->y() -1, $center->x() + $radius -1, $center->y() + $radius -1);
     }
 
     public function withFillColor(string $color, callable $within): void
     {
-        $old = $this->magic->getFillColor();
-        $this->magic->setFillColor($color);
-        $within($this);
-        $this->magic->setFillColor($old);
+        $this->withChange('getFillColor', 'setFillColor', $color, $within);
     }
 
     public function withStrokeColor(string $color, callable $within): void
     {
-        $old = $this->magic->getStrokeColor();
-        $this->magic->setStrokeColor($color);
-        $within($this);
-        $this->magic->setStrokeColor($old);
+        $this->withChange('getStrokeColor', 'setStrokeColor', $color, $within);
     }
 
     public function shiftBy(Point $by, Point $point): Point
@@ -95,7 +96,34 @@ class Draw implements DrawInterface
 
     public function shiftAllBy(Point $by, array $points): array
     {
-        return array_map(function($p) use ($by) {return $this->shiftBy($by, $p);}, $points);
+        return array_map(fn($p) => $this->shiftBy($by, $p), $points);
+    }
+
+    public function text(Point $pos, string $text, ?string $background_color = null): void
+    {
+        $run = $background_color === null ?
+               fn ($f) => $f($this) :
+               fn ($f) => $this->withChange('getTextUnderColor', 'setTextUnderColor', $background_color, $f);
+        $pos = ($this->shift_text)($pos, $text);
+        $run(fn () => $this->magic->annotation($pos->x(), $pos->y(), $text));
+    }
+
+    public function withCenteredText(callable $within): void
+    {
+        $old = $this->shift_text;
+
+        $this->shift_text = fn (Point $pos, string $text): Point => $this->shiftBy(
+            new Point(0, $this->parent->queryFontMetrics($this->magic, $text, false)['ascender'] / 2),
+            $pos
+        );
+
+        $this->withChange('getTextAlignment', 'setTextAlignment', Imagick::ALIGN_CENTER, $within);
+        $this->shift_text = $old;
+    }
+
+    public function withFontSize(int $font_size, callable $within): void
+    {
+        $this->withChange('getFontSize', 'setFontSize', $font_size, $within);
     }
 
     private function withPath(callable $proc): void
@@ -103,5 +131,13 @@ class Draw implements DrawInterface
         $this->magic->pathStart();
         $proc();
         $this->magic->pathFinish();
+    }
+
+    private function withChange(string $get, string $set, $val, callable $within): void
+    {
+        $old = $this->magic->$get();
+        $this->magic->$set($val);
+        $within($this);
+        $this->magic->$set($old);
     }
 }

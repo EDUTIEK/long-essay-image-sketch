@@ -6,6 +6,7 @@ namespace LongEssayImageSketch\Shape;
 
 use LongEssayImageSketch\Shape;
 use LongEssayImageSketch\Point;
+use LongEssayImageSketch\Draw;
 
 abstract class NoShape implements Shape
 {
@@ -33,5 +34,12 @@ abstract class NoShape implements Shape
     public function color(): string
     {
         return $this->color;
+    }
+
+    protected function drawLabel(Draw $draw): void
+    {
+        $draw->withFillColor('white', function (Draw $draw): void {
+            $draw->text($this->pos(), $this->label(), '#808080');
+        });
     }
 }

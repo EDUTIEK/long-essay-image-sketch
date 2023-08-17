@@ -22,5 +22,6 @@ class Line extends NoShape
         $draw->withFillColor($this->color(), function ($draw) {
             $draw->polygon([$this->pos(), $draw->shiftBy($this->pos(), $this->end)]);
         });
+        $this->drawLabel($draw);
     }
 }

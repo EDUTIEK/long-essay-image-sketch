@@ -29,5 +29,6 @@ class Rectangle extends NoShape
                 new Point(0, $this->height),
             ]));
         });
+        $this->drawLabel($draw);
     }
 }

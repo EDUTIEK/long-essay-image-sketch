@@ -7,16 +7,36 @@ namespace LongEssayImageSketch\ImageMagick;
 use Imagick;
 use ImagickDraw;
 use LongEssayImageSketch\Sketch as SketchInterface;
+use LongEssayImageSketch\Point;
 use Exception;
+use Closure;
 
 class Sketch implements SketchInterface
 {
     private string $output_format;
+    private int $font_size;
+    private Closure $set_font;
 
-    public function __construct(string $output_format = 'PNG')
+    /**
+     * @param array{
+     *     ?output_format: string,
+     *     ?font: array{?name: string, ?path: string, ?size: int}
+     * } $config
+     */
+    public function __construct(array $config = [])
     {
-        $this->assertSupportedFormat($output_format);
-        $this->output_format = $output_format;
+        $config = array_merge_recursive([
+            'output_format' => 'PNG',
+            'font' => ['name' => 'FreeSerif', 'size' => 10],
+        ], $config);
+
+        $this->assertSupportedFormat($config['output_format']);
+
+        $this->output_format = $config['output_format'];
+        $this->font_size = $config['font']['size'];
+        $this->set_font = isset($config['font']['path']) ?
+                        fn (ImagickDraw $draw) => $draw->setFontFamily($config['font']['path']) :
+                        fn (ImagickDraw $draw) => $draw->setFont($config['font']['name']);
     }
 
     public function applyShapes(array $shapes, $image)
@@ -26,8 +46,10 @@ class Sketch implements SketchInterface
 
         foreach ($shapes as $shape) {
             $draw = new ImagickDraw();
+            ($this->set_font)($draw);
+            $draw->setFontSize($this->font_size);
             $draw->setFillColor('#00000000');
-            $shape->draw(new Draw($draw));
+            $shape->draw(new Draw($draw, $magic));
             $magic->drawImage($draw);
         }
 

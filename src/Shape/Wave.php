@@ -39,6 +39,7 @@ class Wave extends NoShape
                 $draw->path($this->relativePos(), $path);
             });
         });
+        $this->drawLabel($draw);
     }
 
     private function drawWaveRest(Draw $draw, Point $pitch, float $rest, int $waves): Closure

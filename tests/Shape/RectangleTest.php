@@ -18,6 +18,7 @@ class RectangleTest extends TestCase
 
     public function testDraw(): void
     {
+        $colors = ['blue', 'white'];
         $pos = new Point(37, 87);
         $width = 22;
         $height = 51;
@@ -30,12 +31,13 @@ class RectangleTest extends TestCase
         ];
 
         $draw = $this->getMockBuilder(Draw::class)->getMock();
-        $draw->expects(self::once())->method('withFillColor')->willReturnCallback(function ($color, $within) use ($draw) {
-            $this->assertSame('blue', $color);
+        $draw->expects(self::exactly(count($colors)))->method('withFillColor')->willReturnCallback(function ($color, $within) use ($draw, &$colors) {
+            $this->assertSame(array_shift($colors), $color);
             $within($draw);
         });
         $draw->expects(self::once())->method('shiftAllBy')->with($pos, $rect_as_polygon)->willReturn($shifted);
         $draw->expects(self::once())->method('polygon')->with($shifted);
+        $draw->expects(self::once())->method('text')->with($pos, 'Hej');
 
         $rectangle = new Rectangle($width, $height, $pos, 'Hej', 'blue');
         $rectangle->draw($draw);
