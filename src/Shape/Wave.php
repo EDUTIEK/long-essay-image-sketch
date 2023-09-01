@@ -144,7 +144,7 @@ class Wave extends NoShape
 
     private function angle(): float
     {
-        return atan($this->end->y() / $this->end->x());
+        return atan($this->end->y() / ($this->end->x() + ($this->end->x() == 0 ? 1 : 0)));
     }
 
     private function rotate(Point $a, float $r): Point
