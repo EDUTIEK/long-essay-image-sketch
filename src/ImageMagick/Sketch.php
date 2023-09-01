@@ -25,7 +25,7 @@ class Sketch implements SketchInterface
      */
     public function __construct(array $config = [])
     {
-        $config = array_merge_recursive([
+        $config = array_replace_recursive([
             'output_format' => 'PNG',
             'font' => ['name' => 'FreeSerif', 'size' => 10],
         ], $config);
@@ -35,8 +35,12 @@ class Sketch implements SketchInterface
         $this->output_format = $config['output_format'];
         $this->font_size = $config['font']['size'];
         $this->set_font = isset($config['font']['path']) ?
-                        fn (ImagickDraw $draw) => $draw->setFontFamily($config['font']['path']) :
-                        fn (ImagickDraw $draw) => $draw->setFont($config['font']['name']);
+                        fn (ImagickDraw $draw) => $draw->setFontFamily($config['font']['path']) : (
+                        isset($config['font']['name']) ?
+                            fn (ImagickDraw $draw) => $draw->setFont($config['font']['name']):
+                            fn (ImagickDraw $draw)  => $draw->getFont()
+                        );
+                            
     }
 
     public function applyShapes(array $shapes, $image)
