@@ -23,22 +23,31 @@ class Wave extends NoShape
 
     public function draw(Draw $draw): void
     {
-        $draw->withRotation($this->angle(), function (Draw $draw) {
-            $draw->withStrokeColor($this->color(), function (Draw $draw): void {
-                $pitch = new Point(Wave::LENGTH, Wave::HEIGHT);
-                $length = sqrt(pow($this->end->x(), 2) + pow($this->end->y(), 2));
-                $waves = (int) floor($length / $pitch->x());
+        $pos = new Point($this->pos()->x(), $this->pos()->y());
+        
+        // simulate line strength by multiple lines
+        for ($i = 0; $i <= 10; $i++) {
+            $this->pos = new Point($pos->x(), $pos->y() + $i);
 
-                $path = $this->wavePath($draw, $pitch, $waves);
+            $draw->withRotation($this->angle(), function (Draw $draw) {
+                $draw->withStrokeColor($this->color(), function (Draw $draw): void {
+                    $pitch = new Point(Wave::LENGTH, Wave::HEIGHT);
+                    $length = sqrt(pow($this->end->x(), 2) + pow($this->end->y(), 2));
+                    $waves = (int) floor($length / $pitch->x());
 
-                $rest = $length % $pitch->x();
-                if ($rest !== 0) {
-                    $path[] = $this->drawWaveRest($draw, $pitch, $rest, $waves);
-                }
+                    $path = $this->wavePath($draw, $pitch, $waves);
 
-                $draw->path($this->relativePos(), $path);
+                    $rest = $length % $pitch->x();
+                    if ($rest !== 0) {
+                        $path[] = $this->drawWaveRest($draw, $pitch, $rest, $waves);
+                    }
+
+                    $draw->path($this->relativePos(), $path);
+                });
             });
-        });
+        }
+        
+        $this->pos = $pos;
         $this->drawLabel($draw);
     }
 

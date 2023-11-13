@@ -10,7 +10,7 @@ use LongEssayImageSketch\Draw;
 
 abstract class NoShape implements Shape
 {
-    private Point $pos;
+    protected Point $pos;
     private string $label;
     private string $color;
 
@@ -40,7 +40,14 @@ abstract class NoShape implements Shape
     {
         if (!empty($this->label)) {
             $draw->withFillColor('white', function (Draw $draw): void {
-                $draw->text(New Point($this->pos()->x(), $this->pos->y()-20), ' ' . $this->label() . ' ', '#808080');
+                if ($this instanceof Circle) {
+                    $y = $this->pos->y() - 120;
+                }
+                else {
+                    $y = $this->pos->y() - 20;
+                }
+                
+                $draw->text(New Point($this->pos()->x(), $y), ' ' . $this->label() . ' ', '#808080');
             });
         }
     }

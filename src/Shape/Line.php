@@ -20,7 +20,12 @@ class Line extends NoShape
     public function draw(Draw $draw): void
     {
         $draw->withFillColor($this->color(), function ($draw) {
-            $draw->polygon([$this->pos(), $draw->shiftBy($this->pos(), $this->end)]);
+            $draw->polygon($draw->shiftAllBy($this->pos(), [
+                new Point(0, -10),
+                new Point($this->end->x(), -10),
+                new Point($this->end->x(), 0),
+                new Point(0, 0),
+            ]));
         });
         $this->drawLabel($draw);
     }
