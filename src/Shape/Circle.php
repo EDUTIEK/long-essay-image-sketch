@@ -30,10 +30,10 @@ class Circle extends NoShape
         $draw->withFillColor($this->symbol_color, function (Draw $draw): void {
             $draw->withCenteredText(function (Draw $draw): void {
                 $draw->withFontSize($this->font_size, function (Draw $draw): void {
-                    $draw->text(new Point($this->pos()->x(), $this->pos()->y()-10), $this->symbol);
+                    $draw->text(new Point($this->pos()->x(), $this->pos()->y() - 10), $this->symbol);
                 });
             });
         });
-        $this->drawLabel($draw);
+        $this->drawLabel($draw, new Point($this->pos()->x(), $this->pos()->y() - 120));
     }
 }

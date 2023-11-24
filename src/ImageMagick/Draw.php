@@ -19,6 +19,7 @@ class Draw implements DrawInterface
     private ImagickDraw $magic;
     private Imagick $parent;
     private Closure $shift_text;
+    private Point $origin;
 
     public function __construct(ImagickDraw $magic, Imagick $parent)
     {
@@ -26,12 +27,13 @@ class Draw implements DrawInterface
         $this->parent = $parent;
         $this->shift_text = fn (Point $pos): Point => $pos;
         $this->magic->setTextEncoding('UTF-8');
+        $this->origin = new Point(0, 0);
     }
 
     public function path(Point $start, array $segments): void
     {
         $this->withPath(function () use ($start, $segments): void {
-            $this->magic->pathMoveToAbsolute($start->x(), $start->y());
+            $this->magic->pathMoveToAbsolute($this->origin->x() + $start->x(), $this->origin->y() + $start->y());
             foreach ($segments as $segment) {
                 $segment($this->magic);
             }
@@ -41,7 +43,7 @@ class Draw implements DrawInterface
     public function lineTo(Point $point): Closure
     {
         return function (ImagickDraw $magic) use ($point): void {
-            $magic->pathLineToAbsolute($point->x(), $point->y());
+            $magic->pathLineToAbsolute($this->origin->x() + $point->x(), $this->origin->y() + $point->y());
         };
     }
 
@@ -49,10 +51,10 @@ class Draw implements DrawInterface
     {
         return function (ImagickDraw $magic) use ($control, $point): void {
             $magic->pathCurveToQuadraticBezierAbsolute(
-                $point->x() + $control->x(),
-                $point->y() + $control->y(),
-                $point->x(),
-                $point->y()
+                $this->origin->x() + $point->x() + $control->x(),
+                $this->origin->y() + $point->y() + $control->y(),
+                $this->origin->x() + $point->x(),
+                $this->origin->y() + $point->y()
             );
         };
     }
@@ -76,7 +78,29 @@ class Draw implements DrawInterface
 
     public function circle(Point $center, float $radius): void
     {
-        $this->magic->circle($center->x() -1, $center->y() -1, $center->x() + $radius -1, $center->y() + $radius -1);
+        $this->magic->circle(
+            $this->origin->x() + $center->x() -1,
+            $this->origin->y() + $center->y() -1,
+            $this->origin->x() + $center->x() + $radius -1,
+            $this->origin->y() + $center->y() + $radius -1
+        );
+    }
+
+    public function with(array $with_what, callable $within): void
+    {
+        $with_what = array_map(
+            fn(string $k, $v) => ['with' . ucfirst($k), $v],
+            array_keys($with_what),
+            array_values($with_what)
+        );
+
+        $proc = array_reduce(
+            $with_what,
+            fn(callable $prev, array $with_what) => fn() => [$this, $with_what[0]]($with_what[1], $prev),
+            $within
+        );
+
+        $proc($this);
     }
 
     public function withFillColor(string $color, callable $within): void
@@ -87,6 +111,19 @@ class Draw implements DrawInterface
     public function withStrokeColor(string $color, callable $within): void
     {
         $this->withChange('getStrokeColor', 'setStrokeColor', $color, $within);
+    }
+
+    public function withStrokeWidth(float $width, callable $within): void
+    {
+        $this->withChange('getStrokeWidth', 'setStrokeWidth', $width, $within);
+    }
+
+    public function withOriginAt(Point $origin, callable $within): void
+    {
+        $old = $this->origin;
+        $this->origin = $origin;
+        $within($this);
+        $this->origin = $old;
     }
 
     public function shiftBy(Point $by, Point $point): Point

@@ -37,7 +37,7 @@ class RectangleTest extends TestCase
         });
         $draw->expects(self::once())->method('shiftAllBy')->with($pos, $rect_as_polygon)->willReturn($shifted);
         $draw->expects(self::once())->method('polygon')->with($shifted);
-        $draw->expects(self::once())->method('text')->with($pos, 'Hej');
+        $draw->expects(self::once())->method('text')->with(new Point(37, 67), ' Hej ');
 
         $rectangle = new Rectangle($width, $height, $pos, 'Hej', 'blue');
         $rectangle->draw($draw);

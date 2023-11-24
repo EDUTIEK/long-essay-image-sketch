@@ -12,8 +12,9 @@ class Wave extends NoShape
 {
     private Point $end;
 
-    private const LENGTH = 25;
-    private const HEIGHT = 15;
+    public const LENGTH = 50;
+    public const HEIGHT = 50;
+    public const LINE_WIDTH = 10;
 
     public function __construct(Point $end, ...$args)
     {
@@ -23,31 +24,30 @@ class Wave extends NoShape
 
     public function draw(Draw $draw): void
     {
-        $pos = new Point($this->pos()->x(), $this->pos()->y());
-        
-        // simulate line strength by multiple lines
-        for ($i = 0; $i <= 10; $i++) {
-            $this->pos = new Point($pos->x(), $pos->y() + $i);
+        $pitch = new Point(Wave::LENGTH, Wave::HEIGHT);
+        $length = sqrt(pow($this->end->x(), 2) + pow($this->end->y(), 2));
+        $waves = (int) floor($length / $pitch->x());
 
-            $draw->withRotation($this->angle(), function (Draw $draw) {
-                $draw->withStrokeColor($this->color(), function (Draw $draw): void {
-                    $pitch = new Point(Wave::LENGTH, Wave::HEIGHT);
-                    $length = sqrt(pow($this->end->x(), 2) + pow($this->end->y(), 2));
-                    $waves = (int) floor($length / $pitch->x());
+        $path = $this->wavePath($draw, $pitch, $waves);
 
-                    $path = $this->wavePath($draw, $pitch, $waves);
-
-                    $rest = $length % $pitch->x();
-                    if ($rest !== 0) {
-                        $path[] = $this->drawWaveRest($draw, $pitch, $rest, $waves);
-                    }
-
-                    $draw->path($this->relativePos(), $path);
-                });
-            });
+        $rest = $length % $pitch->x();
+        if ($rest !== 0) {
+            $path[] = $this->drawWaveRest($draw, $pitch, $rest, $waves);
         }
-        
-        $this->pos = $pos;
+
+        $angle = $this->angle($this->end);
+        $origin = $this->rotate(
+            $this->pos(),
+            -$angle
+        );
+
+        $draw->with([
+            'rotation' => $angle,
+            'strokeColor' => $this->color(),
+            'strokeWidth' => self::LINE_WIDTH,
+            'originAt' => $origin,
+        ], fn () => $draw->path(new Point(0, 0), $path));
+
         $this->drawLabel($draw);
     }
 
@@ -97,7 +97,7 @@ class Wave extends NoShape
 
         $gradient = $pitch->y() / $pitch->x(); // a = c / b
 
-        $end_of_last_wave = $draw->shiftBy($this->relativePos(), new Point($waves * $pitch->x(), 0)); // Offset the wave is moved to in the end.
+        $end_of_last_wave = new Point($waves * $pitch->x(), 0);
         $x_procent = $rest / $pitch->x();
         // f(x) = a * 2x - a * 2x^2
         $y_procent = $gradient * 2 * $x_procent - $gradient * 2 * pow($x_procent, 2);
@@ -137,7 +137,7 @@ class Wave extends NoShape
     {
         return array_map(function (int $i) use ($draw, $pitch): Closure {
             $curve = new Point(- $pitch->x() / 2, - $pitch->y() * ($i & 1 ? -1 : 1));
-            return $draw->quadraticCurve($curve, $draw->shiftBy($this->relativePos(), new Point(($i + 1) * $pitch->x(), 0)));
+            return $draw->quadraticCurve($curve, new Point(($i + 1) * $pitch->x(), 0));
         }, $this->range($waves));
     }
 
@@ -146,14 +146,16 @@ class Wave extends NoShape
         return $length > 0 ? range(0, $length -1) : [];
     }
 
-    private function relativePos(): Point
+    private function relativePos(Point $pos, Point $direction): Point
     {
-        return $this->rotate($this->pos(), -$this->angle());
+        return $this->rotate($pos, -$this->angle($direction));
     }
 
-    private function angle(): float
+    private function angle(Point $direction): float
     {
-        return atan($this->end->y() / ($this->end->x() + ($this->end->x() == 0 ? 1 : 0)));
+        return $direction->x() ?
+            atan($direction->y() / $direction->x()) :
+            asin($direction->y());
     }
 
     private function rotate(Point $a, float $r): Point

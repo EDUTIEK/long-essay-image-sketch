@@ -48,7 +48,7 @@ class DrawTest extends TestCase
         $draw_line = $draw->lineTo(new Point(3, 4));
         $this->assertInstanceOf(Closure::class, $draw_line);
 
-        $draw_line($magic);
+        $draw_line($magic, new Point(0, 0));
     }
 
     public function testQuadraticCurve(): void
@@ -59,7 +59,7 @@ class DrawTest extends TestCase
         $draw = new Draw($magic, $this->getMockBuilder(Imagick::class)->disableOriginalConstructor()->getMock());
         $draw_curve = $draw->quadraticCurve(new Point(3, 4), new Point(5, 6));
         $this->assertInstanceOf(Closure::class, $draw_curve);
-        $draw_curve($magic);
+        $draw_curve($magic, new Point(0, 0));
     }
 
     public function testWithRotation(): void
@@ -129,6 +129,37 @@ class DrawTest extends TestCase
         });
     }
 
+    public function testWithStrokeWidth(): void
+    {
+        $magic = $this->getMockBuilder(ImagickDraw::class)->disableOriginalConstructor()->getMock();
+        $magic->expects(self::once())->method('getStrokeWidth')->willReturn(8.0);
+        $magic->expects(self::exactly(2))->method('setStrokeWidth')->withConsecutive([3.0], [8.0]);
+
+        $draw = new Draw($magic, $this->getMockBuilder(Imagick::class)->disableOriginalConstructor()->getMock());
+        $draw->withStrokeWidth(3.0, function ($d) use ($draw) {
+            $this->assertSame($draw, $d);
+        });
+    }
+
+
+    public function testWithOriginAt(): void
+    {
+        $origin = new Point(40, 76);
+
+        $magic = $this->getMockBuilder(ImagickDraw::class)->disableOriginalConstructor()->getMock();
+        $magic->expects(self::exactly(2))->method('pathMoveToAbsolute')->withConsecutive(
+            [$origin->x(), $origin->y()],
+            [0, 0]
+        );
+        $draw = new Draw($magic, $this->getMockBuilder(Imagick::class)->disableOriginalConstructor()->getMock());
+
+        $draw->withOriginAt($origin, function ($d) use ($draw): void {
+            $this->assertSame($draw, $d);
+            $draw->path(new Point(0, 0), []);
+        });
+        $draw->path(new Point(0, 0), []);
+    }
+
     public function testShiftBy(): void
     {
         $magic = $this->getMockBuilder(ImagickDraw::class)->disableOriginalConstructor()->getMock();
@@ -179,5 +210,24 @@ class DrawTest extends TestCase
 
         $draw = new Draw($magic, $this->getMockBuilder(Imagick::class)->disableOriginalConstructor()->getMock());
         $draw->withFontSize(23, fn ($draw) => $draw->text(new Point(20, 30), 'Hej'));
+    }
+
+    public function testWith(): void
+    {
+        $pixel = $this->getMockBuilder(ImagickPixel::class)->disableOriginalConstructor()->getMock();
+        $magic = $this->getMockBuilder(ImagickDraw::class)->disableOriginalConstructor()->getMock();
+        $magic->expects(self::exactly(2))->method('setFillColor')->withConsecutive(['red'], [$pixel]);
+        $magic->expects(self::once())->method('getFillColor')->willReturn($pixel);
+        $magic->expects(self::exactly(2))->method('setStrokeColor')->withConsecutive(['green'], [$pixel]);
+        $magic->expects(self::once())->method('getStrokeColor')->willReturn($pixel);
+
+        $draw = new Draw($magic, $this->getMockBuilder(Imagick::class)->disableOriginalConstructor()->getMock());
+
+        $draw->with([
+            'fillColor' => 'red',
+            'strokeColor' => 'green',
+        ], function ($d) use ($draw) {
+            $this->assertSame($draw, $d);
+        });
     }
 }

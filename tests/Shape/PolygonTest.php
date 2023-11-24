@@ -30,7 +30,7 @@ class PolygonTest extends TestCase
         });
         $draw->expects(self::once())->method('shiftAllBy')->with($pos, $polygon)->willReturn($shifted);
         $draw->expects(self::once())->method('polygon')->with($shifted);
-        $draw->expects(self::once())->method('text')->with($pos, 'Hej');
+        $draw->expects(self::once())->method('text')->with(new Point(20, 3), ' Hej ');
 
         $polygon = new Polygon($polygon, $pos, 'Hej', 'green');
         $polygon->draw($draw);

@@ -23,7 +23,7 @@ class Polygon extends NoShape
 
     public function draw(Draw $draw): void
     {
-        $draw->withStrokeColor($this->color(), function ($draw) {
+        $draw->withFillColor($this->color(), function ($draw) {
             $draw->polygon($draw->shiftAllBy($this->pos(), $this->polygon));
         });
         $this->drawLabel($draw);

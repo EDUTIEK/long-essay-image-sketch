@@ -42,8 +42,11 @@ interface Draw
      */
     public function shiftAllBy(Point $by, array $points): array;
     public function circle(Point $center, float $radius): void;
+    public function with(array $with_what, callable $within): void;
     public function withFillColor(string $color, callable $within): void;
     public function withStrokeColor(string $color, callable $within): void;
+    public function withStrokeWidth(float $width, callable $within): void;
+    public function withOriginAt(Point $origin, callable $within): void;
     public function shiftBy(Point $by, Point $point): Point;
     public function text(Point $pos, string $text): void;
     public function withCenteredText(callable $within): void;

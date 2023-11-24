@@ -18,40 +18,39 @@ class WaveTest extends TestCase
 
     public function testDraw(): void
     {
-        $pos = new Point(23, 34);
-        $angle = 1/4 * pi();
+        $start = new Point(23, 34);
+        $end = new Point(73, 33);
         $expected_path = [function(){}, function(){}];
         $shifted = [new Point(1, 1), new Point(2, 2), new Point(3, 3), new Point(4, 4), new Point(5, 5)];
 
         $draw = $this->getMockBuilder(Draw::class)->getMock();
-        $draw->expects(self::once())->method('withRotation')->willReturnCallback(function ($radians, $within) use ($draw, $angle) {
-            $this->assertSame($angle, $radians);
+        $draw->expects(self::once())->method('with')->willReturnCallback(function (array $with_what, callable $within) use ($draw) {
+            $this->assertEquals([
+                'rotation',
+                'strokeColor',
+                'strokeWidth',
+                'originAt',
+            ], array_keys($with_what));
             $within($draw);
         });
-        $draw->expects(self::once())->method('withStrokeColor')->willReturnCallback(function ($color, $within) use ($draw) {
-            $this->assertSame('yellow', $color);
-            $within($draw);
-        });
-        $draw->expects(self::once())->method('path')->willReturnCallback(function ($start, $path) use ($draw, $angle, $expected_path) {
+        $draw->expects(self::once())->method('path')->willReturnCallback(function ($start, $path) use ($draw, $expected_path) {
             $this->assertEquals(
-                new Point(23 * cos(-$angle) - 34 * sin(-$angle), 23 * sin(-$angle) + 34 * cos(-$angle)),
+                new Point(0, 0),
                 $start
             );
+
             $this->assertEquals($expected_path, $path);
 
         });
-        $draw->expects(self::exactly(count($expected_path)))->method('quadraticCurve')->withConsecutive(
-            [new Point(-12.5, -15), $shifted[0]],
-            [$shifted[4], $shifted[3]],
-        )->willReturnOnConsecutiveCalls(...$expected_path);
+        $draw->expects(self::exactly(count($expected_path)))->method('quadraticCurve')->willReturnOnConsecutiveCalls(...$expected_path);
         $draw->expects(self::any())->method('shiftBy')->willReturnOnConsecutiveCalls(...$shifted);
-        $draw->expects(self::once())->method('text')->with($pos, 'Hej');
+        $draw->expects(self::once())->method('text')->with(new Point(23, 14), ' Hej ');
         $draw->expects(self::once())->method('withFillColor')->willReturnCallback(function ($color, $within) use ($draw) {
             $this->assertSame('white', $color);
             $within($draw);
         });
 
-        $wave = new Wave(new Point(33, 33), $pos, 'Hej', 'yellow');
+        $wave = new Wave($end, $start, 'Hej', 'yellow');
         $wave->draw($draw);
     }
 }

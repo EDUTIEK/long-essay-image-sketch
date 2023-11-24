@@ -25,7 +25,7 @@ class CircleTest extends TestCase
             $this->assertSame(array_shift($colors), $color);
             $within($draw);
         });
-        $draw->expects(self::once())->method('circle')->with($pos, 5);
+        $draw->expects(self::once())->method('circle')->with($pos, 70);
         $draw->expects(self::once())->method('withCenteredText')->willReturnCallback(function (callable $within) use ($draw): void {
             $within($draw);
         });
@@ -34,8 +34,8 @@ class CircleTest extends TestCase
             $within($draw);
         });
         $draw->expects(self::exactly(2))->method('text')->withConsecutive(
-            [$pos, 'X'],
-            [$pos, 'Hej']
+            [new Point(10, 0), 'X'],
+            [new Point(10, -110), ' Hej ']
         );
 
         $circle = new Circle('X', 'green', 22, $pos, 'Hej', 'red');
