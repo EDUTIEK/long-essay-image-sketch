@@ -24,7 +24,7 @@ class Circle extends NoShape
     public function draw(Draw $draw): void
     {
         $draw->withFillColor($this->color(), function (Draw $draw): void {
-            $draw->circle($this->pos(), 70);
+            $draw->circle($this->pos(), 50);
         });
 
         $draw->withFillColor($this->symbol_color, function (Draw $draw): void {
