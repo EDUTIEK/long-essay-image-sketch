@@ -18,8 +18,6 @@ class Wave extends NoShape
 
     public function __construct(Point $end, ...$args)
     {
-        # Avoid imagick error with zero x or y in end of Wave
-        $end = new Point($end->x() == 0 ? 1 : $end->x(), $end->y() == 0 ? 1 : $end->y());
         $this->end = $end;
         parent::__construct(...$args);
     }
@@ -157,7 +155,7 @@ class Wave extends NoShape
     {
         return $direction->x() ?
             atan($direction->y() / $direction->x()) :
-            asin($direction->y());
+            ($direction->y() <=> 0) * pi()/2;
     }
 
     private function rotate(Point $a, float $r): Point
