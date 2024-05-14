@@ -57,7 +57,11 @@ class Sketch implements SketchInterface
             $magic->drawImage($draw);
         }
 
-        return $this->asStream($magic);
+        $stream = $this->asStream($magic);
+        $magic->clear();
+        unset($magick);
+
+        return $stream;
     }
 
     private function asStream(Imagick $magic)
