@@ -14,6 +14,8 @@ use Closure;
 class Sketch implements SketchInterface
 {
     private string $output_format;
+    private int $output_quality;
+    private int $output_dpi;
     private int $font_size;
     private Closure $set_font;
 
@@ -26,13 +28,17 @@ class Sketch implements SketchInterface
     public function __construct(array $config = [])
     {
         $config = array_replace_recursive([
-            'output_format' => 'PNG',
+            'output_format' => 'JPG',
+            'output_quality' => 20,
+            'output_dpi' => 300,
             'font' => ['name' => 'FreeSerif', 'size' => 10],
         ], $config);
 
         $this->assertSupportedFormat($config['output_format']);
 
         $this->output_format = $config['output_format'];
+        $this->output_quality = $config['output_quality'];
+        $this->output_dpi = $config['output_dpi'];
         $this->font_size = $config['font']['size'];
         $this->set_font = isset($config['font']['path']) ?
                         fn (ImagickDraw $draw) => $draw->setFontFamily($config['font']['path']) : (
@@ -47,6 +53,8 @@ class Sketch implements SketchInterface
     {
         $magic = new Imagick();
         $magic->readImageFile($image);
+        $magic->setImageCompressionQuality($this->output_quality);
+        $magic->setOption('density', (string) $this->output_dpi);
 
         foreach ($shapes as $shape) {
             $draw = new ImagickDraw();
