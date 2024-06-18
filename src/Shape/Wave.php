@@ -25,7 +25,7 @@ class Wave extends NoShape
     public function draw(Draw $draw): void
     {
         $pitch = new Point(Wave::LENGTH, Wave::HEIGHT);
-        $length = sqrt(pow($this->end->x(), 2) + pow($this->end->y(), 2));
+        $length = (int) sqrt(pow($this->end->x(), 2) + pow($this->end->y(), 2));
         $waves = (int) floor($length / $pitch->x());
 
         $path = $this->wavePath($draw, $pitch, $waves);
