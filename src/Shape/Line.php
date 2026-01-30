@@ -11,7 +11,7 @@ class Line extends NoShape
 {
     private Point $end;
 
-    public const LINE_WIDTH = 10;
+    public const LINE_WIDTH = 17;
 
     public function __construct(Point $end, ...$args)
     {
