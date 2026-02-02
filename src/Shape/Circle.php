@@ -34,6 +34,6 @@ class Circle extends NoShape
                 });
             });
         });
-        $this->drawLabel($draw, new Point($this->pos()->x(), $this->pos()->y() - 120));
+        $this->drawLabel($draw, new Point(2300, $this->pos()->y()));
     }
 }

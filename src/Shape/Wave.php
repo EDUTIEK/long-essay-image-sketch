@@ -12,9 +12,9 @@ class Wave extends NoShape
 {
     private Point $end;
 
-    public const LENGTH = 50;
-    public const HEIGHT = 50;
-    public const LINE_WIDTH = 10;
+    public const LENGTH = 15;
+    public const HEIGHT = 10;
+    public const LINE_WIDTH = 6;
 
     public function __construct(Point $end, ...$args)
     {
